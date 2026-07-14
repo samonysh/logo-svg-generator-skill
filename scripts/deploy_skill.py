@@ -1,7 +1,15 @@
-"""deploy_skill.py — copy skill/ + references/ + templates/ into .trae/skills/logo-svg-generator/.
+"""deploy_skill.py — copy SKILL.md + references/ + assets/ + scripts/ into a target skills directory.
+
+The layout follows the SkillHub spec (https://skillhub.cn/tutorials#publish-manage-skill):
+
+    skill-name/
+    ├── SKILL.md          # required
+    ├── scripts/          # optional
+    ├── references/       # optional
+    └── assets/           # optional (templates & resource files live here)
 
 Run from the project root:
-    python scripts/deploy_skill.py                 # deploy to d:\CODE\.trae\skills
+    python scripts/deploy_skill.py                 # deploy to d:\\CODE\\.trae\\skills
     python scripts/deploy_skill.py --target C:\\path\\to\\.trae\\skills
 """
 from __future__ import annotations
@@ -21,12 +29,11 @@ def deploy(target_root: Path) -> None:
         shutil.rmtree(dest)
     dest.mkdir(parents=True)
 
-    # 1) SKILL.md at the root of the skill folder
-    shutil.copy(ROOT / "skill" / "SKILL.md", dest / "SKILL.md")
+    # 1) SKILL.md at the root of the skill folder (SkillHub required layout)
+    shutil.copy(ROOT / "SKILL.md", dest / "SKILL.md")
 
-    # 2) supporting content copied in-place; SKILL.md's `../references/...` links
-    #    resolve because SKILL.md sits at dest/ and we place references at dest/references/
-    for name in ("references", "templates", "scripts"):
+    # 2) SkillHub optional folders: scripts/, references/, assets/
+    for name in ("references", "assets", "scripts"):
         src = ROOT / name
         if src.exists():
             shutil.copytree(src, dest / name)

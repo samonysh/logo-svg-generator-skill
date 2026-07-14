@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-14
+### Changed
+- **Repository layout now conforms to the [SkillHub publish spec](https://skillhub.cn/tutorials#publish-manage-skill).**
+  - `skill/SKILL.md` → `SKILL.md` at the project root (SkillHub's required entry point).
+  - `templates/` → `assets/templates/` (SkillHub treats `assets/` as the canonical home for templates and resource files).
+- `SKILL.md` frontmatter gains a `tags: [design, svg, logo, brand, vector, icon]` array as recommended by the SkillHub sample.
+- `scripts/deploy_skill.py` copies from the new locations (`SKILL.md`, `references/`, `assets/`, `scripts/`).
+- `scripts/release.py` — `INCLUDE_PATHS`, `SKILL_FILE` constant, managed-file set, and commit staging all updated to the new layout.
+- English & Chinese READMEs: repository-layout tree, "publishing" section, and every link into `templates/*` retargeted at `assets/templates/*`; former "clawhub" references replaced with SkillHub.
+
+### Fixed
+- `scripts/release.py` push stage now checks `git diff --cached --name-only` after staging and only invokes `git commit` when there really are staged changes — previously it unconditionally committed, so a preflight with no version-number diff would fail with `git commit` exit code 1.
+
+### Migration
+- If you had a local checkout on `0.2.0`, re-run `python scripts/deploy_skill.py` after pulling — the old `skill/` and `templates/` directories are gone and any external references to them (e.g. custom scripts) must be pointed at `SKILL.md` / `assets/templates/*` respectively.
+
 ## [0.2.0] - 2026-07-14
 ### Added
 - `scripts/config.json`: multi-mirror CDN list (`cdn_url_templates`) with jsDelivr / fastly / gcore / `jsd.onmicrosoft.cn` / unpkg / raw.githubusercontent fallbacks, plus `fetch_retries_per_url` and `fetch_timeout_seconds` tuning knobs.

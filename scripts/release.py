@@ -4,7 +4,7 @@
 
 一条命令完成三件事：
 1. Preflight: 检查发版前置条件（干净的 git 工作区、gh 已登录、CHANGELOG 有当前版本记录），
-   并把 VERSION、CHANGELOG、skill/SKILL.md 等文件中的版本号统一。
+   并把 VERSION、CHANGELOG、SKILL.md 等文件中的版本号统一。
 2. Push:     提交版本号变更、打 tag、推送到 GitHub。
 3. Release:  打包 release zip，创建 GitHub Release 并上传附件。
 
@@ -37,16 +37,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 VERSION_FILE = ROOT / "VERSION"
 CHANGELOG_FILE = ROOT / "CHANGELOG.md"
-SKILL_FILE = ROOT / "skill" / "SKILL.md"
+SKILL_FILE = ROOT / "SKILL.md"
 DIST_DIR = ROOT / "dist"
 
 SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$")
 
 # 打包时需要包含 / 排除的路径（相对 ROOT）
 INCLUDE_PATHS = [
-    "skill",
+    "SKILL.md",
     "references",
-    "templates",
+    "assets",
     "scripts",
     "examples",
     "README.md",
@@ -171,7 +171,7 @@ def stage_preflight(version: str, *, allow_dirty: bool = False) -> None:
         # preflight 阶段会修改版本号，允许存在这些未提交的改动
         # 但如果用户有其它未提交内容，需要 --allow-dirty
         dirty_files = [line[3:] for line in r.stdout.splitlines()]
-        managed = {"VERSION", "CHANGELOG.md", "skill/SKILL.md"}
+        managed = {"VERSION", "CHANGELOG.md", "SKILL.md"}
         other = [f for f in dirty_files if f not in managed]
         if other and not allow_dirty:
             fail("工作区存在未提交的变更（非版本号相关）：\n  "
@@ -226,14 +226,14 @@ def _stamp_changelog(version: str) -> None:
 
 
 def _stamp_skill_frontmatter(version: str) -> None:
-    """把版本号写入 skill/SKILL.md 的 frontmatter（若还没有 version 字段则追加）。"""
+    """把版本号写入 SKILL.md 的 frontmatter（若还没有 version 字段则追加）。"""
     if not SKILL_FILE.exists():
         warn(f"未找到 {SKILL_FILE.relative_to(ROOT)}，跳过。")
         return
     text = SKILL_FILE.read_text(encoding="utf-8")
     m = re.match(r"^---\n(.*?)\n---\n", text, re.S)
     if not m:
-        warn("skill/SKILL.md 无 frontmatter 段，跳过版本注入。")
+        warn("SKILL.md 无 frontmatter 段，跳过版本注入。")
         return
     fm = m.group(1)
     if re.search(r"^version:\s*", fm, re.M):
@@ -242,7 +242,7 @@ def _stamp_skill_frontmatter(version: str) -> None:
         new_fm = fm.rstrip() + f'\nversion: "{version}"'
     new_text = text.replace(m.group(0), f"---\n{new_fm}\n---\n", 1)
     SKILL_FILE.write_text(new_text, encoding="utf-8")
-    ok(f"skill/SKILL.md frontmatter 版本号 -> {version}")
+    ok(f"SKILL.md frontmatter 版本号 -> {version}")
 
 
 # ---------------------------------------------------------------------------
@@ -265,11 +265,16 @@ def stage_push(version: str, *, remote: str = "origin",
     # 若有版本号相关的变更，提交它
     r = run(["git", "status", "--porcelain"], capture=True)
     if r.stdout.strip():
-        run(["git", "add", "VERSION", "CHANGELOG.md", "skill/SKILL.md"], check=False)
+        run(["git", "add", "VERSION", "CHANGELOG.md", "SKILL.md"], check=False)
         # 兜底：把剩余的都加上
         run(["git", "add", "-A"])
-        run(["git", "commit", "-m", f"chore(release): v{version}"])
-        ok(f"已提交 chore(release): v{version}")
+        # 再确认一次是否真的有已暂存的变更；否则 git commit 会以 exit 1 失败
+        staged = run(["git", "diff", "--cached", "--name-only"], capture=True)
+        if staged.stdout.strip():
+            run(["git", "commit", "-m", f"chore(release): v{version}"])
+            ok(f"已提交 chore(release): v{version}")
+        else:
+            info("无已暂存的变更，跳过 commit")
     else:
         info("无需新增 commit")
 

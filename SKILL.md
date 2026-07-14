@@ -1,7 +1,8 @@
 ---
 name: "logo-svg-generator"
 description: "Generate multi-size SVG logos from natural-language product briefs, following Simple Icons design rules; runs an iterative generate → visual-check → optimize loop with a vision-capable LLM. Invoke when the user asks to design a logo, brand mark, app icon or product icon from a description."
-version: "0.2.0"
+version: "0.3.0"
+tags: ["design", "svg", "logo", "brand", "vector", "icon"]
 ---
 
 # Logo SVG Generator
@@ -82,7 +83,7 @@ Run `scripts/render_previews.py` to rasterize the master at **32, 64, 128, 256, 
 - The 5 sizes side-by-side (to catch scale-dependent issues)
 - Coordinate grid overlay at 64px
 
-Then, hand `_review.png` **plus** the source SVG to a **vision-capable LLM** with the prompt in **[templates/visual-review-prompt.md](templates/visual-review-prompt.md)**. The reviewer must return a JSON critique:
+Then, hand `_review.png` **plus** the source SVG to a **vision-capable LLM** with the prompt in **[assets/templates/visual-review-prompt.md](assets/templates/visual-review-prompt.md)**. The reviewer must return a JSON critique:
 
 ```json
 {
@@ -150,25 +151,26 @@ Every SVG file the skill emits must pass **all** of:
 
 ```
 logo-svg-generator-skill/
-├─ skill/SKILL.md               ← this file (deploy to any agent's skill dir)
+├─ SKILL.md                    ← this file (SkillHub entry point)
 ├─ references/
 │  ├─ design-rules.md          ← condensed Simple Icons rules
 │  ├─ motif-patterns.md        ← common shape recipes + path snippets
 │  └─ sample-icons.md          ← 15 curated real SVG references
-├─ templates/
-│  ├─ visual-review-prompt.md  ← prompt for vision LLM critique
-│  └─ concept-brief-template.md
+├─ assets/
+│  ├─ logo.svg / logo-*.svg    ← this project's own brand marks
+│  └─ templates/
+│     ├─ visual-review-prompt.md  ← prompt for vision LLM critique
+│     └─ concept-brief-template.md
 ├─ scripts/
 │  ├─ fetch_samples.py         ← pull N icons from simple-icons CDN
 │  ├─ render_previews.py       ← SVG → review PNG sheet
 │  ├─ export_variants.py       ← multi-size + color variants
 │  ├─ simplify_for_small.py    ← small-size path simplification
 │  ├─ validate_svg.py          ← rule compliance checker
-│  ├─ deploy_skill.py          ← copy skill/ → target agent's skill dir
+│  ├─ deploy_skill.py          ← copy skill files → target agent's skill dir
 │  └─ config.json
 ├─ samples/                    ← downloaded reference SVGs (git-ignored)
-├─ output/                     ← per-run deliverables (git-ignored)
-└─ README.md
+└─ output/                     ← per-run deliverables (git-ignored)
 ```
 
 ---
@@ -178,8 +180,8 @@ logo-svg-generator-skill/
 - [references/design-rules.md](references/design-rules.md)
 - [references/motif-patterns.md](references/motif-patterns.md)
 - [references/sample-icons.md](references/sample-icons.md)
-- [templates/visual-review-prompt.md](templates/visual-review-prompt.md)
-- [templates/concept-brief-template.md](templates/concept-brief-template.md)
+- [assets/templates/visual-review-prompt.md](assets/templates/visual-review-prompt.md)
+- [assets/templates/concept-brief-template.md](assets/templates/concept-brief-template.md)
 
 Source of truth for design regulations:
 - https://simpleicons.org
@@ -269,4 +271,4 @@ Step 7  → user receives:
               brand.json                { "review_mode": "vision", ... }
 ```
 
-For a copy-pasteable input brief see [`examples/01-novasync/brief.md`](../examples/01-novasync/brief.md); expected outputs are described in [`examples/01-novasync/README.md`](../examples/01-novasync/README.md).
+For a copy-pasteable input brief see [`examples/01-novasync/brief.md`](examples/01-novasync/brief.md); expected outputs are described in [`examples/01-novasync/README.md`](examples/01-novasync/README.md).
