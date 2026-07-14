@@ -67,3 +67,27 @@ Rejected feedback: "make it more balanced", "improve proportions", "feels off".
 Accepted feedback: "the right stem is 0.4u thinner than the left — thicken it by widening the x-coordinates of segments 3-5 by 0.4u", "rotate the swoosh 3° clockwise around (12, 12)", "shift the counter of the O 0.3u up so its optical center matches the outer ring".
 
 Return ONLY the JSON object. No preamble, no closing remarks.
+
+---
+
+## Fallback — when no vision-capable LLM is available
+
+If the current host does not expose a vision-capable model (or the caller passed `--no-review`):
+
+1. **Do NOT invent a score.** Never fabricate a `readable_at_16px` verdict without actually seeing the image.
+2. Run `python scripts/validate_svg.py --json path/to/master-24.svg`. If it returns violations, treat them as `high`-severity `rule-compliance` issues and STOP — ask the caller to fix them before proceeding.
+3. If validation passes, emit a **structural-only** report and set `brand.json.review_mode = "structural-only"`:
+
+```json
+{
+  "score": null,
+  "readable_at_16px": null,
+  "issues": [],
+  "concrete_fixes": [],
+  "verdict": "accept-structural-only",
+  "review_mode": "structural-only",
+  "note": "No vision-capable LLM was available; only structural (Simple-Icons rule) checks were performed. Please have a human eyeball the 16px preview before shipping."
+}
+```
+
+4. Include this note verbatim in the user-facing summary so downstream users understand the quality bar. Never silently downgrade — the user MUST know a human review is still required.

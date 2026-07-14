@@ -99,9 +99,10 @@ Then, hand `_review.png` **plus** the source SVG to a **vision-capable LLM** wit
 ### Step 5 — Optimize
 If `verdict == "revise"`, apply the `concrete_fixes` to the SVG path (edit coordinates directly; keep single-path rule). Save as `master-24.v{N}.svg`, then **loop back to Step 4**.
 
-- Max loop count: **3 iterations** (config in `scripts/config.json`).
+- Max loop count: **3 iterations** (config in `scripts/config.json`; can be raised to 5 with `--max-iterations` when the caller explicitly asks for more polish).
 - Stop early when `score ≥ 8.5` AND `readable_at_16px == true` AND no `high` severity issue remains.
-- If loops exhaust without acceptance, keep the highest-scoring version and report the residual issues to the user.
+- If loops exhaust without acceptance, keep the highest-scoring version as the final master, save every iteration under `output/<slug>/history/` for debugging, and produce a **user-facing summary** (`output/<slug>/_review-summary.md`) that translates each residual `issue.note` into a plain-language sentence plus a suggested next action (e.g. "the letter N is slightly off-center — you can nudge it 0.3u right, or ask me to run 2 more iterations").
+- **Graceful degradation when no vision-capable LLM is available:** skip Step 4/5's vision critique and instead run the deterministic checklist in `scripts/validate_svg.py` **plus** the geometric checks documented in `references/design-rules.md` §2 (touches-two-sides, bbox center window, ink coverage). Mark `brand.json.review_mode = "structural-only"` so downstream users know a human should eyeball the result.
 
 ### Step 6 — Generate multi-size + color variants
 Once the master is accepted, run `scripts/export_variants.py` to produce:
@@ -184,3 +185,88 @@ Source of truth for design regulations:
 - https://simpleicons.org
 - https://github.com/simple-icons/simple-icons/blob/develop/CONTRIBUTING.md
 - https://github.com/simple-icons/simple-icons/blob/develop/slugs.md
+
+---
+
+## Edge cases & how to handle them
+
+| Situation | What the skill does |
+|---|---|
+| **Very long product name** (`>16` chars, e.g. "HyperContinuousDeliveryPlatform") | Do NOT try to fit the whole name inside the 24×24 canvas. Use only the first initial as a monogram, or ask the user to pick a 1–2-letter abbreviation. Full name still goes into `<title>` and `brand.json.title`. |
+| **Multi-word name** ("Nova Sync", "Pulse Mail") | Compose either an initials monogram (`NS`, `PM`) or a symbol derived from the dominant word. Never render the full wordmark inside the icon. |
+| **Non-ASCII product name** ("音见 AI", "Café") | Slugify to ASCII per §5 of `design-rules.md` before saving files; keep the original characters only inside `<title>`. |
+| **User requests a wordmark or lockup** | Explain that this skill emits symbol marks only, then either (a) generate the strongest single-letter monogram, or (b) hand off to a general design step outside the skill. |
+| **User requests a photorealistic / gradient / 3-D logo** | Refuse politely and explain that Simple-Icons style is monochrome flat vector. Offer a flat interpretation as an alternative. |
+| **Brand color has poor contrast on white** (e.g. `#F7F7F7`) | Warn the user, still emit the color variant, and always ship a black monochrome fallback. |
+| **Vision LLM unavailable / rate-limited** | Fall back to `review_mode = "structural-only"` (see Step 5). Do NOT block the export. |
+| **Rasterizer unavailable** (no `cairosvg`, `resvg`, or `inkscape`) | Emit the SVG variants + `brand.json`, skip `png/` + `_review.png`, and tell the user which one-liner install would restore raster output. |
+| **CDN blocked / offline** | `fetch_samples.py` retries with the fallback mirrors in `scripts/config.json`. If all fail, skip sample fetching — the skill can still design from `references/motif-patterns.md` alone. |
+| **User in mainland China** | The default primary CDN is jsDelivr; alternate mirrors (`fastly`, `unpkg`, `bytedance jsdelivr mirror`) are tried in order. See `scripts/config.json.cdn_url_templates`. |
+
+---
+
+## FAQ / anti-patterns
+
+**Q: The reviewer keeps returning `score = 6-7` — what should I do?**
+The most common cause is **too many motifs**. Cut back to one dominant idea (§Combining motifs · Rule 1 in `motif-patterns.md`) and re-run. If the score still stalls, ask the user for a fresh metaphor hint rather than looping indefinitely.
+
+**Q: `validate_svg.py` fails with `element: <g> is forbidden` — why?**
+An LLM sometimes wraps the path in `<g>` for grouping. Delete the `<g>` tags; keep only `<svg><title/><path/></svg>`. The skill MUST emit exactly two child elements of `<svg>`.
+
+**Q: The path uses `fill="currentColor"` on the master.**
+That is still a `fill` attribute and fails compliance. The master carries NO fill; color is added by `export_variants.py` only for the `color/` variants.
+
+**Q: My icon looks great at 512 px but is unreadable at 16 px.**
+Run `scripts/simplify_for_small.py` and, more importantly, drop sub-details below ~1u wide before Step 3. The reviewer's `readable_at_16px` field is a hard gate; if it comes back `false`, do NOT accept.
+
+**Q: Can I skip the vision-review loop for speed?**
+Yes — set `max_review_iterations: 0` in `scripts/config.json` or pass `--no-review`. You will get a rule-compliant but visually un-audited SVG. Recommended only when the caller is doing their own review.
+
+**Q: The generated logo looks generic (a circle with a letter).**
+Feed the concept brief more specific `metaphor_hints`. "Two orbiting nodes with a break", "envelope with an EKG waveform" produces markedly stronger results than "modern and clean".
+
+### Anti-patterns to avoid
+1. **Silently swallowing rule violations.** Every emitted SVG must pass `validate_svg.py`. If it fails, fix the SVG or report the violation to the user — never emit anyway.
+2. **Adding a wordmark inside the 24×24 canvas.** Even a 2-letter wordmark rarely survives at 16 px.
+3. **Using `<circle>` "because the geometry is easier".** Convert to a `<path>` arc; multiple SVG elements are a hard-fail.
+4. **Skipping the concept brief.** Without a brief, the reviewer has no `brand_fit` reference and the iteration loop cannot converge.
+5. **Looping past `max_review_iterations`.** If the score has not converged in 3 rounds, further iterations rarely help — ask the user for a new metaphor instead.
+
+---
+
+## End-to-end walk-through
+
+```text
+User: 帮我给 NovaSync 设计一个 logo，跨设备文件同步工具，靛蓝色，开发者向。
+
+Step 1  → skill loads references/design-rules.md and references/motif-patterns.md
+Step 2  → concept brief (auto-derived):
+          product_name: "NovaSync", slug: "novasync",
+          preferred_color: "#4F46E5",
+          metaphor_hints: "letter N + sync orbit arrows",
+          shape_family: "letterform"
+Step 3  → generates master-24.svg with a single <path> that renders an 'N'
+          whose diagonal is a partial orbit arc; touches top + bottom edges.
+Step 4  → python scripts/render_previews.py output/novasync/master-24.svg
+          → output/novasync/_review.png
+          vision LLM returns:
+            { "score": 7.4, "readable_at_16px": true,
+              "issues": [ {"severity":"high","area":"balance",
+                           "note":"orbit arc is 0.4u too low"} ],
+              "concrete_fixes": ["shift arc anchor from (7,15) to (7,14.6)"],
+              "verdict": "revise" }
+Step 5  → path is edited; saved as master-24.v1.svg; loop back.
+          v1 scores 8.7 → verdict "accept".
+Step 6  → python scripts/export_variants.py output/novasync/master-24.v1.svg \
+              --slug novasync --title NovaSync --hex "#4F46E5"
+Step 7  → user receives:
+            output/novasync/
+              master-24.svg
+              mono/logo-{16,24,32,64,128,256,512}.svg
+              color/logo-{...}.svg      (fill="#4F46E5")
+              png/logo-{...}.png
+              _review.png
+              brand.json                { "review_mode": "vision", ... }
+```
+
+For a copy-pasteable input brief see [`examples/01-novasync/brief.md`](../examples/01-novasync/brief.md); expected outputs are described in [`examples/01-novasync/README.md`](../examples/01-novasync/README.md).

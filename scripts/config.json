@@ -10,7 +10,17 @@
     "microsoft", "meta", "nvidia", "vercel", "vue-dot-js",
     "react", "nodedotjs", "figma", "linear", "notion"
   ],
+  "cdn_url_templates": [
+    "https://cdn.jsdelivr.net/npm/simple-icons/icons/{slug}.svg",
+    "https://fastly.jsdelivr.net/npm/simple-icons/icons/{slug}.svg",
+    "https://gcore.jsdelivr.net/npm/simple-icons/icons/{slug}.svg",
+    "https://jsd.onmicrosoft.cn/npm/simple-icons/icons/{slug}.svg",
+    "https://unpkg.com/simple-icons/icons/{slug}.svg",
+    "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/{slug}.svg"
+  ],
   "cdn_url_template": "https://cdn.jsdelivr.net/npm/simple-icons/icons/{slug}.svg",
+  "fetch_retries_per_url": 2,
+  "fetch_timeout_seconds": 15,
   "output_root": "output",
   "samples_root": "samples"
 }
