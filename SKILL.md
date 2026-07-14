@@ -1,7 +1,12 @@
 ---
 name: "logo-svg-generator"
+slug: "logo-svg-generator"
+displayName: "Logo SVG Generator"
 description: "Generate multi-size SVG logos from natural-language product briefs, following Simple Icons design rules; runs an iterative generate → visual-check → optimize loop with a vision-capable LLM. Invoke when the user asks to design a logo, brand mark, app icon or product icon from a description."
+summary: "Design production-ready monochrome / brand-color SVG logos in multiple sizes with an iterative vision-LLM review loop, following Simple Icons rules."
 version: "0.3.1"
+license: "MIT"
+homepage: "https://github.com/samonysh/logo-svg-generator-skill"
 tags: ["design", "svg", "logo", "brand", "vector", "icon"]
 ---
 
