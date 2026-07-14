@@ -75,7 +75,13 @@ Follow these hard rules (from Simple Icons CONTRIBUTING.md):
 
 Write the master to `output/<slug>/master-24.svg`.
 
-### Step 4 — Rasterize + visual check (VISION LLM REQUIRED)
+### Step 4 — Rasterize + visual check (VISION-CAPABLE LLM REQUIRED BY DEFAULT)
+
+**Hard requirement:** the logo check step MUST be performed by an LLM that has image-input (vision) capability, and that vision capability MUST actually be exercised on the rendered PNG. This is the default and non-optional path — text-only critique is not acceptable as a substitute. If the current host / model does **not** expose vision input, the skill MUST NOT silently fall back; instead the agent MUST:
+
+1. Explicitly inform the user that a vision-capable LLM is required for the review loop.
+2. Ask the user to switch to a vision-capable model (or provide an explicit `--no-review` / `structural-only` override) before continuing.
+3. Only proceed to the structural-only degradation (Step 5, last bullet) after the user has knowingly opted in.
 
 Run `scripts/render_previews.py` to rasterize the master at **32, 64, 128, 256, 512** and produce a review sheet PNG (`output/<slug>/_review.png`) with:
 
@@ -83,7 +89,7 @@ Run `scripts/render_previews.py` to rasterize the master at **32, 64, 128, 256, 
 - The 5 sizes side-by-side (to catch scale-dependent issues)
 - Coordinate grid overlay at 64px
 
-Then, hand `_review.png` **plus** the source SVG to a **vision-capable LLM** with the prompt in **[assets/templates/visual-review-prompt.md](assets/templates/visual-review-prompt.md)**. The reviewer must return a JSON critique:
+Then, hand `_review.png` **plus** the source SVG to the **vision-capable LLM** with the prompt in **[assets/templates/visual-review-prompt.md](assets/templates/visual-review-prompt.md)**. The image MUST be attached as a real image input (not described in text) so the model exercises its vision pathway. The reviewer must return a JSON critique:
 
 ```json
 {
@@ -103,7 +109,7 @@ If `verdict == "revise"`, apply the `concrete_fixes` to the SVG path (edit coord
 - Max loop count: **3 iterations** (config in `scripts/config.json`; can be raised to 5 with `--max-iterations` when the caller explicitly asks for more polish).
 - Stop early when `score ≥ 8.5` AND `readable_at_16px == true` AND no `high` severity issue remains.
 - If loops exhaust without acceptance, keep the highest-scoring version as the final master, save every iteration under `output/<slug>/history/` for debugging, and produce a **user-facing summary** (`output/<slug>/_review-summary.md`) that translates each residual `issue.note` into a plain-language sentence plus a suggested next action (e.g. "the letter N is slightly off-center — you can nudge it 0.3u right, or ask me to run 2 more iterations").
-- **Graceful degradation when no vision-capable LLM is available:** skip Step 4/5's vision critique and instead run the deterministic checklist in `scripts/validate_svg.py` **plus** the geometric checks documented in `references/design-rules.md` §2 (touches-two-sides, bbox center window, ink coverage). Mark `brand.json.review_mode = "structural-only"` so downstream users know a human should eyeball the result.
+- **Graceful degradation when no vision-capable LLM is available:** this path is **opt-in only** and requires either the user's explicit consent (see Step 4 hard requirement) or a `--no-review` / `require_vision_llm=false` override in `scripts/config.json`. When permitted, skip Step 4/5's vision critique and instead run the deterministic checklist in `scripts/validate_svg.py` **plus** the geometric checks documented in `references/design-rules.md` §2 (touches-two-sides, bbox center window, ink coverage). Mark `brand.json.review_mode = "structural-only"` so downstream users know a human should eyeball the result. Never engage this path silently.
 
 ### Step 6 — Generate multi-size + color variants
 Once the master is accepted, run `scripts/export_variants.py` to produce:
@@ -200,7 +206,7 @@ Source of truth for design regulations:
 | **User requests a wordmark or lockup** | Explain that this skill emits symbol marks only, then either (a) generate the strongest single-letter monogram, or (b) hand off to a general design step outside the skill. |
 | **User requests a photorealistic / gradient / 3-D logo** | Refuse politely and explain that Simple-Icons style is monochrome flat vector. Offer a flat interpretation as an alternative. |
 | **Brand color has poor contrast on white** (e.g. `#F7F7F7`) | Warn the user, still emit the color variant, and always ship a black monochrome fallback. |
-| **Vision LLM unavailable / rate-limited** | Fall back to `review_mode = "structural-only"` (see Step 5). Do NOT block the export. |
+| **Vision LLM unavailable / rate-limited** | Stop and inform the user — a vision-capable LLM is the default, non-optional reviewer. Only fall back to `review_mode = "structural-only"` (see Step 5) after the user explicitly opts in (or `--no-review` is passed). Do NOT block the export once the user has opted in. |
 | **Rasterizer unavailable** (no `cairosvg`, `resvg`, or `inkscape`) | Emit the SVG variants + `brand.json`, skip `png/` + `_review.png`, and tell the user which one-liner install would restore raster output. |
 | **CDN blocked / offline** | `fetch_samples.py` retries with the fallback mirrors in `scripts/config.json`. If all fail, skip sample fetching — the skill can still design from `references/motif-patterns.md` alone. |
 | **User in mainland China** | The default primary CDN is jsDelivr; alternate mirrors (`fastly`, `unpkg`, `bytedance jsdelivr mirror`) are tried in order. See `scripts/config.json.cdn_url_templates`. |

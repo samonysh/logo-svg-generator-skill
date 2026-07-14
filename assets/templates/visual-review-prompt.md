@@ -1,7 +1,9 @@
 # Visual Review Prompt (for the vision-capable LLM)
 
+> **Mandatory reviewer type.** This review MUST be executed by an LLM with real image-input (vision) capability, and the `_review.png` MUST be attached as an actual image input so the model exercises its vision pathway. Text-only critique (describing the PNG in words, or reading the raw SVG source without seeing the render) is **not** an acceptable substitute for the default review path. If no vision-capable LLM is available, follow the Fallback section at the bottom of this file — and only after the user has explicitly opted in.
+
 Copy this whole block as the user message to a vision-capable LLM. Attach:
-- `_review.png` — the review sheet produced by `scripts/render_previews.py`
+- `_review.png` — the review sheet produced by `scripts/render_previews.py` (**attach as image input**)
 - `master-24.svg` (or the current iteration file) — the raw SVG source
 - The concept brief (see `concept-brief-template.md`)
 
@@ -72,7 +74,7 @@ Return ONLY the JSON object. No preamble, no closing remarks.
 
 ## Fallback — when no vision-capable LLM is available
 
-If the current host does not expose a vision-capable model (or the caller passed `--no-review`):
+The default path REQUIRES a vision-capable LLM. This fallback is only permitted when either (a) the user has explicitly opted in after being told a vision-capable LLM is unavailable, or (b) the caller passed `--no-review` / set `require_vision_llm=false` in `scripts/config.json`.
 
 1. **Do NOT invent a score.** Never fabricate a `readable_at_16px` verdict without actually seeing the image.
 2. Run `python scripts/validate_svg.py --json path/to/master-24.svg`. If it returns violations, treat them as `high`-severity `rule-compliance` issues and STOP — ask the caller to fix them before proceeding.

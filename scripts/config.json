@@ -3,6 +3,7 @@
   "max_review_iterations": 3,
   "accept_score_min": 8.5,
   "ink_coverage_range": [0.25, 0.65],
+  "require_vision_llm": true,
   "sample_slugs_to_fetch": [
     "github", "apple", "google", "visa", "x",
     "nike", "spotify", "adobe", "mastercard", "youtube",
