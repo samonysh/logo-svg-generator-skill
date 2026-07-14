@@ -24,19 +24,18 @@ Skill 以 **纯 Markdown + Python 脚本** 打包，不绑定任何特定的 Age
 
 ```
 logo-svg-generator-skill/
-├─ skill/
-│  └─ SKILL.md                    ← Skill 本体（部署到任意 Agent 的 skill 目录）
-├─ assets/                        ← 项目自身的品牌资源（本仓库的 Logo）
+├─ SKILL.md                       ← SkillHub 入口文件（必需）
+├─ assets/                        ← 项目自身的品牌资源 + Skill 模板
 │  ├─ logo.svg                        24×24 Simple-Icons 主图（Skill 自产）
 │  ├─ logo-mono-128.svg               128 px 黑白预览
-│  └─ logo-color-128.svg              128 px 靛蓝 #4F46E5 预览
+│  ├─ logo-color-128.svg              128 px 靛蓝 #4F46E5 预览
+│  └─ templates/
+│     ├─ visual-review-prompt.md      视觉审校 prompt
+│     └─ concept-brief-template.md    概念简报模板
 ├─ references/
 │  ├─ design-rules.md             ← 精简版 Simple Icons 设计规则
 │  ├─ motif-patterns.md           ← 常见单路径造型配方
 │  └─ sample-icons.md             ← 15 个精选真实 SVG 参考
-├─ templates/
-│  ├─ visual-review-prompt.md     ← 视觉审校 prompt
-│  └─ concept-brief-template.md   ← 概念简报模板
 ├─ scripts/
 │  ├─ config.json                 ← 尺寸列表、迭代上限、CDN 模板
 │  ├─ fetch_samples.py            ← 从 simple-icons CDN 抓参考图标
@@ -56,6 +55,8 @@ logo-svg-generator-skill/
 └─ README.zh-CN.md                ← 本文档
 ```
 
+> `SKILL.md` / `references/` / `assets/` / `scripts/` 的排布严格遵循 [SkillHub 发布规范](https://skillhub.cn/tutorials#publish-manage-skill)，整棵目录树可以原样打包成 zip 上传到 SkillHub。
+
 ---
 
 ## 快速开始
@@ -74,7 +75,7 @@ python -m pip install cairosvg pillow
 python scripts\deploy_skill.py
 ```
 
-脚本默认会把 `skill/SKILL.md`、`references/`、`templates/`、`scripts/` 复制到 `.trae/skills/logo-svg-generator/`。通过 `--target` 可以把它投放到任意其它 Agent 的 Skill 目录——例如 Opencode / Claude Code / Hermes / openclaw / Cursor 等——或者直接把 `skill/` 目录软链 / 复制到你 Agent 加载指令包的位置：
+脚本默认会把 `SKILL.md`、`references/`、`assets/`、`scripts/` 复制到 `.trae/skills/logo-svg-generator/`。通过 `--target` 可以把它投放到任意其它 Agent 的 Skill 目录——例如 Opencode / Claude Code / Hermes / openclaw / Cursor 等——或者直接把项目顶层的这些文件软链 / 复制到你 Agent 加载指令包的位置：
 
 ```powershell
 # 示例：按你使用的 Agent 选一条
@@ -93,7 +94,7 @@ Skill 会自动：
 1. 从简介推断出 `slug` 与品牌色 HEX。
 2. 加载 [`references/design-rules.md`](references/design-rules.md) 与 [`references/motif-patterns.md`](references/motif-patterns.md)。
 3. 生成一个 24×24 的 **单路径** 主 SVG，严格遵循全部 Simple Icons 规则。
-4. 光栅化生成一张审校拼图，附上 [`templates/visual-review-prompt.md`](templates/visual-review-prompt.md) 交给视觉大模型。
+4. 光栅化生成一张审校拼图，附上 [`assets/templates/visual-review-prompt.md`](assets/templates/visual-review-prompt.md) 交给视觉大模型。
 5. 循环 **生成 → 审校 → 优化**，最多 3 轮，直到 `score ≥ 8.5`、`readable_at_16px = true` 且不再有 `high` 严重度问题。
 6. 输出 `output/<slug>/{master-24.svg, mono/, color/, png/, favicon/, brand.json, _review.png}`。
 
@@ -182,7 +183,7 @@ python scripts\deploy_skill.py
 
 ---
 
-## 发布到 GitHub / clawhub
+## 发布到 GitHub / SkillHub
 
 本仓库已按公开发布准备好，可直接推送：
 
@@ -195,7 +196,7 @@ git remote add origin https://github.com/<你>/logo-svg-generator-skill.git
 git push -u origin main
 ```
 
-上传到 **clawhub**（或任何需要 `SKILL.md` 作为入口的 Skill 市场）时都可以原样上传整个目录，`skill/SKILL.md` 即 Skill 入口，配套的 `references/`、`templates/`、`scripts/` 目录一并携带、无需改动。
+上传到 **[SkillHub](https://skillhub.cn/)**（或任何要求 `SKILL.md` 放在压缩包根目录的 Skill 市场）时，直接把整棵目录打成 zip，或者使用 [`scripts/release.py`](scripts/release.py) 生成的 `dist/logo-svg-generator-<version>.zip` 上传即可——项目布局已经完全符合 SkillHub 规范：`SKILL.md` 位于顶层，可选的 `scripts/`、`references/`、`assets/` 三个目录与它平级。
 
 ### 发布 Release
 

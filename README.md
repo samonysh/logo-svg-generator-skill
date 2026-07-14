@@ -24,19 +24,18 @@ The skill is packaged as **plain Markdown + Python scripts**, with no runtime de
 
 ```
 logo-svg-generator-skill/
-├─ skill/
-│  └─ SKILL.md                    ← the actual skill definition (deploy to any agent's skill dir)
-├─ assets/                        ← project brand assets (this repo's own logo)
+├─ SKILL.md                       ← SkillHub entry point (required)
+├─ assets/                        ← project brand assets + skill templates
 │  ├─ logo.svg                        24×24 Simple-Icons master (self-dogfooded)
 │  ├─ logo-mono-128.svg               128 px monochrome preview
-│  └─ logo-color-128.svg               128 px indigo #4F46E5 preview
+│  ├─ logo-color-128.svg              128 px indigo #4F46E5 preview
+│  └─ templates/
+│     ├─ visual-review-prompt.md      prompt for the vision reviewer
+│     └─ concept-brief-template.md    concept brief structure
 ├─ references/
 │  ├─ design-rules.md             ← condensed Simple Icons style guide
 │  ├─ motif-patterns.md           ← reusable single-path recipes
 │  └─ sample-icons.md             ← 15 curated real SVG references
-├─ templates/
-│  ├─ visual-review-prompt.md     ← prompt for the vision reviewer
-│  └─ concept-brief-template.md   ← concept brief structure
 ├─ scripts/
 │  ├─ config.json                 ← size list, iteration cap, CDN template
 │  ├─ fetch_samples.py            ← download reference SVGs from simple-icons CDN
@@ -56,6 +55,8 @@ logo-svg-generator-skill/
 └─ README.zh-CN.md                ← Chinese
 ```
 
+> The `SKILL.md` / `references/` / `assets/` / `scripts/` layout follows the [SkillHub publish spec](https://skillhub.cn/tutorials#publish-manage-skill) — the same tree can be zipped and uploaded to SkillHub as-is.
+
 ---
 
 ## Quick start
@@ -74,7 +75,7 @@ Python 3.10+ is required. `cairosvg` / `pillow` are only needed if you want the 
 python scripts\deploy_skill.py
 ```
 
-This copies `skill/SKILL.md`, `references/`, `templates/` and `scripts/` into a target skill directory (default: `.trae/skills/logo-svg-generator/`). Pass `--target` to point at any other agent's skill folder — e.g. Opencode / Claude Code / Hermes / openclaw / Cursor — or simply symlink / copy the `skill/` directory into wherever your agent loads instruction packs from:
+This copies `SKILL.md`, `references/`, `assets/` and `scripts/` into a target skill directory (default: `.trae/skills/logo-svg-generator/`). Pass `--target` to point at any other agent's skill folder — e.g. Opencode / Claude Code / Hermes / openclaw / Cursor — or simply symlink / copy the top-level project files into wherever your agent loads instruction packs from:
 
 ```powershell
 # Examples — pick whichever matches your agent
@@ -93,7 +94,7 @@ The skill will:
 1. Auto-derive `slug` + brand hex from the brief.
 2. Consult [`references/design-rules.md`](references/design-rules.md) + [`references/motif-patterns.md`](references/motif-patterns.md).
 3. Generate a 24×24 single-path SVG master obeying all Simple Icons rules.
-4. Rasterize a review sheet and hand it to a vision-capable LLM with [`templates/visual-review-prompt.md`](templates/visual-review-prompt.md).
+4. Rasterize a review sheet and hand it to a vision-capable LLM with [`assets/templates/visual-review-prompt.md`](assets/templates/visual-review-prompt.md).
 5. Loop **generate → review → optimize** up to 3 times until `score ≥ 8.5`, `readable_at_16px = true`, and no `high`-severity issue remains.
 6. Emit `output/<slug>/{master-24.svg, mono/, color/, png/, favicon/, brand.json, _review.png}`.
 
@@ -182,7 +183,7 @@ Iteration cap and acceptance thresholds are configurable in [`scripts/config.jso
 
 ---
 
-## Publishing to GitHub / clawhub
+## Publishing to GitHub / SkillHub
 
 This project is ready to be pushed as a public repo:
 
@@ -195,7 +196,7 @@ git remote add origin https://github.com/<you>/logo-svg-generator-skill.git
 git push -u origin main
 ```
 
-For **clawhub** — or any skill marketplace that expects a `SKILL.md` entry — the same tree can be uploaded as-is; the `skill/SKILL.md` file is the skill entry point, and the accompanying `references/`, `templates/`, `scripts/` folders travel with it unchanged.
+For **[SkillHub](https://skillhub.cn/)** — or any skill marketplace that expects a `SKILL.md` entry at the archive root — zip the whole project (or the `dist/logo-svg-generator-<version>.zip` produced by [`scripts/release.py`](scripts/release.py)) and upload it. The layout already matches the SkillHub spec: `SKILL.md` at the top level, with optional `scripts/`, `references/`, `assets/` folders next to it.
 
 ### Cutting a release
 
