@@ -268,8 +268,13 @@ def stage_push(version: str, *, remote: str = "origin",
         run(["git", "add", "VERSION", "CHANGELOG.md", "SKILL.md"], check=False)
         # 兜底：把剩余的都加上
         run(["git", "add", "-A"])
-        run(["git", "commit", "-m", f"chore(release): v{version}"])
-        ok(f"已提交 chore(release): v{version}")
+        # 再确认一次是否真的有已暂存的变更；否则 git commit 会以 exit 1 失败
+        staged = run(["git", "diff", "--cached", "--name-only"], capture=True)
+        if staged.stdout.strip():
+            run(["git", "commit", "-m", f"chore(release): v{version}"])
+            ok(f"已提交 chore(release): v{version}")
+        else:
+            info("无已暂存的变更，跳过 commit")
     else:
         info("无需新增 commit")
 

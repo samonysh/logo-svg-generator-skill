@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `scripts/release.py` — `INCLUDE_PATHS`, `SKILL_FILE` constant, managed-file set, and commit staging all updated to the new layout.
 - English & Chinese READMEs: repository-layout tree, "publishing" section, and every link into `templates/*` retargeted at `assets/templates/*`; former "clawhub" references replaced with SkillHub.
 
+### Fixed
+- `scripts/release.py` push stage now checks `git diff --cached --name-only` after staging and only invokes `git commit` when there really are staged changes — previously it unconditionally committed, so a preflight with no version-number diff would fail with `git commit` exit code 1.
+
 ### Migration
 - If you had a local checkout on `0.2.0`, re-run `python scripts/deploy_skill.py` after pulling — the old `skill/` and `templates/` directories are gone and any external references to them (e.g. custom scripts) must be pointed at `SKILL.md` / `assets/templates/*` respectively.
 
