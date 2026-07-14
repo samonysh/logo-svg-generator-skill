@@ -1,0 +1,16 @@
+{
+  "sizes": [16, 24, 32, 64, 128, 256, 512],
+  "max_review_iterations": 3,
+  "accept_score_min": 8.5,
+  "ink_coverage_range": [0.25, 0.65],
+  "sample_slugs_to_fetch": [
+    "github", "apple", "google", "visa", "x",
+    "nike", "spotify", "adobe", "mastercard", "youtube",
+    "npm", "instagram", "telegram", "openai", "docker",
+    "microsoft", "meta", "nvidia", "vercel", "vue-dot-js",
+    "react", "nodedotjs", "figma", "linear", "notion"
+  ],
+  "cdn_url_template": "https://cdn.jsdelivr.net/npm/simple-icons/icons/{slug}.svg",
+  "output_root": "output",
+  "samples_root": "samples"
+}
