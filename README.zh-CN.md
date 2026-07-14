@@ -10,7 +10,9 @@
 
 > For English documentation, see **[README.md](./README.md)**
 
-一个 TRAE **Skill** 创作项目：把一句自然语言的产品简介，转成一整套 **可直接投产的 SVG Logo**——多尺寸、黑白 + 品牌色双份——严格遵循 [Simple Icons](https://simpleicons.org/) 的设计规范，并通过 **视觉大模型**（vision LLM）执行 **生成 → 视觉审校 → 优化** 的迭代闭环。
+一个可移植、**与 Agent 无关（agent-agnostic）** 的 Skill 创作项目：把一句自然语言的产品简介，转成一整套 **可直接投产的 SVG Logo**——多尺寸、黑白 + 品牌色双份——严格遵循 [Simple Icons](https://simpleicons.org/) 的设计规范，并通过 **视觉大模型**（vision LLM）执行 **生成 → 视觉审校 → 优化** 的迭代闭环。
+
+Skill 以 **纯 Markdown + Python 脚本** 打包，不绑定任何特定的 Agent 运行时。只要你用的编码助手/LLM 工具支持"Skill / Prompt Pack / 指令文件"这类模式，都可以直接使用，包括但不限于 **TRAE、Opencode、Claude Code、Hermes、openclaw**，以及 Cursor、Continue 或你自建的 Agent。TRAE 只是其中的一个参考宿主——同一份文件可以原样投放到其它 Agent 的 skill / rules 目录。
 
 - **产物：** 与 Simple Icons 完全兼容的 `24×24` 主 SVG，以及 `16 / 24 / 32 / 64 / 128 / 256 / 512` px 的黑白与彩色变体、PNG 预览、favicon 套件。
 - **强制约束：** 单一 `<path>`，主图无 `fill` / `stroke`，路径必须触碰 viewBox 的至少 2 条边，居中，墨量占比 25–65 %，16 px 下仍可辨识。
@@ -23,7 +25,7 @@
 ```
 logo-svg-generator-skill/
 ├─ skill/
-│  └─ SKILL.md                    ← Skill 本体（部署到 .trae/skills/）
+│  └─ SKILL.md                    ← Skill 本体（部署到任意 Agent 的 skill 目录）
 ├─ assets/                        ← 项目自身的品牌资源（本仓库的 Logo）
 │  ├─ logo.svg                        24×24 Simple-Icons 主图（Skill 自产）
 │  ├─ logo-mono-128.svg               128 px 黑白预览
@@ -42,7 +44,7 @@ logo-svg-generator-skill/
 │  ├─ render_previews.py          ← 光栅化 + 拼出审校用 PNG
 │  ├─ export_variants.py          ← 多尺寸 + 多颜色 + PNG 变体
 │  ├─ simplify_for_small.py       ← 16 / 24 px 路径简化
-│  └─ deploy_skill.py             ← 部署到 .trae/skills/
+│  └─ deploy_skill.py             ← 部署到目标 Agent 的 skill 目录
 ├─ examples/                      ← 可直接运行的示例
 │  ├─ 01-novasync/                    文件同步工具
 │  ├─ 02-lumendb/                     实时分析数据库
@@ -66,15 +68,23 @@ python -m pip install cairosvg pillow
 
 需要 Python 3.10+。`cairosvg` / `pillow` 仅在本地想生成 PNG 预览时需要；Skill 本体不依赖它们。
 
-### 2. 部署 Skill 到本地 TRAE
+### 2. 把 Skill 部署到你的 Agent
 
 ```powershell
 python scripts\deploy_skill.py
 ```
 
-脚本会把 `skill/SKILL.md`、`references/`、`templates/`、`scripts/` 复制到 `.trae/skills/logo-svg-generator/`。
+脚本默认会把 `skill/SKILL.md`、`references/`、`templates/`、`scripts/` 复制到 `.trae/skills/logo-svg-generator/`。通过 `--target` 可以把它投放到任意其它 Agent 的 Skill 目录——例如 Opencode / Claude Code / Hermes / openclaw / Cursor 等——或者直接把 `skill/` 目录软链 / 复制到你 Agent 加载指令包的位置：
 
-### 3. 让 TRAE 帮你设计 Logo
+```powershell
+# 示例：按你使用的 Agent 选一条
+python scripts\deploy_skill.py --target C:\path\to\.opencode\skills
+python scripts\deploy_skill.py --target C:\path\to\.claude\skills
+python scripts\deploy_skill.py --target C:\path\to\.hermes\skills
+python scripts\deploy_skill.py --target C:\path\to\.openclaw\skills
+```
+
+### 3. 让你的 Agent 帮你设计 Logo
 
 > "帮我给 **NovaSync** 设计一个 Logo，它是面向开发者的跨设备文件同步工具，风格干净现代，靛蓝色。"
 
@@ -91,7 +101,7 @@ Skill 会自动：
 
 ## 示例
 
-[`examples/`](./examples/) 目录下有可以直接复制粘贴到 TRAE 里的示例简报，每个示例带一份 `brief.md` 和一份说明用的 `README.md`。
+[`examples/`](./examples/) 目录下有可以直接复制粘贴到 Agent 对话中的示例简报，每个示例带一份 `brief.md` 和一份说明用的 `README.md`。
 
 | 示例 | 简介 | 视觉动机 |
 |---|---|---|
@@ -102,7 +112,7 @@ Skill 会自动：
 一句话运行：
 
 ```powershell
-# 部署好 Skill 后，在 TRAE 里说：
+# 部署好 Skill 后，在你的 Agent 对话中说：
 请用 logo-svg-generator 这个 Skill 处理 examples/01-novasync/brief.md
 ```
 
@@ -167,7 +177,8 @@ python scripts\deploy_skill.py
 
 - **运行时：** Python 3.10+
 - **可选（PNG 预览）：** `cairosvg` + `pillow`，或 `resvg`，或 PATH 中的 `inkscape`
-- **Skill 运行：** 任意现代 **视觉大模型**（Prompt 与厂商无关）
+- **宿主 Agent：** 任意支持 Markdown Skill / 指令包的编码助手或 LLM 工具——TRAE、Opencode、Claude Code、Hermes、openclaw、Cursor、Continue，或自建 Agent 均可
+- **模型运行：** 任意现代 **视觉大模型**（Prompt 与厂商无关）
 
 ---
 
@@ -184,7 +195,7 @@ git remote add origin https://github.com/<你>/logo-svg-generator-skill.git
 git push -u origin main
 ```
 
-上传到 **clawhub** 时可原样上传整个目录，`skill/SKILL.md` 即 Skill 入口。
+上传到 **clawhub**（或任何需要 `SKILL.md` 作为入口的 Skill 市场）时都可以原样上传整个目录，`skill/SKILL.md` 即 Skill 入口，配套的 `references/`、`templates/`、`scripts/` 目录一并携带、无需改动。
 
 ### 发布 Release
 

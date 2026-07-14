@@ -10,6 +10,8 @@ Turn a natural-language product brief (name, purpose, audience, mood, colors) in
 
 The skill uses an **iterative visual-review loop**: generate → rasterize → visually inspect (vision LLM) → critique → optimize → re-inspect → finalize.
 
+> **Portable / agent-agnostic.** This skill is a plain Markdown + Python bundle. It runs anywhere a coding agent or LLM tool can load a `SKILL.md` and call local scripts — including but not limited to **TRAE, Opencode, Claude Code, Hermes, openclaw**, Cursor, Continue, or a custom harness. Any reference to "the agent" / "the host" below applies uniformly to all of them.
+
 ---
 
 ## When to invoke
@@ -147,7 +149,7 @@ Every SVG file the skill emits must pass **all** of:
 
 ```
 logo-svg-generator-skill/
-├─ skill/SKILL.md               ← this file (deployed to .trae/skills/)
+├─ skill/SKILL.md               ← this file (deploy to any agent's skill dir)
 ├─ references/
 │  ├─ design-rules.md          ← condensed Simple Icons rules
 │  ├─ motif-patterns.md        ← common shape recipes + path snippets
@@ -161,7 +163,7 @@ logo-svg-generator-skill/
 │  ├─ export_variants.py       ← multi-size + color variants
 │  ├─ simplify_for_small.py    ← small-size path simplification
 │  ├─ validate_svg.py          ← rule compliance checker
-│  ├─ deploy_skill.py          ← copy skill/ → .trae/skills/
+│  ├─ deploy_skill.py          ← copy skill/ → target agent's skill dir
 │  └─ config.json
 ├─ samples/                    ← downloaded reference SVGs (git-ignored)
 ├─ output/                     ← per-run deliverables (git-ignored)

@@ -10,7 +10,9 @@
 
 > 中文文档请见 **[README.zh-CN.md](./README.zh-CN.md)**
 
-A TRAE **Skill** authoring project that turns a natural-language product brief into a **production-ready SVG logo set** — multi-size, monochrome + brand color — following the [Simple Icons](https://simpleicons.org/) design regulations, with an iterative **generate → visual-check → optimize** loop powered by a vision-capable LLM.
+A portable, **agent-agnostic Skill** authoring project that turns a natural-language product brief into a **production-ready SVG logo set** — multi-size, monochrome + brand color — following the [Simple Icons](https://simpleicons.org/) design regulations, with an iterative **generate → visual-check → optimize** loop powered by a vision-capable LLM.
+
+The skill is packaged as **plain Markdown + Python scripts**, with no runtime dependency on any specific agent. It works out-of-the-box with any coding agent or LLM tool that supports the "Skill" / "Prompt Pack" / "instruction file" pattern, including but not limited to **TRAE, Opencode, Claude Code, Hermes, openclaw**, Cursor, Continue, and any custom agent that can load a `SKILL.md` and invoke local scripts. TRAE is treated as one reference host — the same files drop straight into other agents' skill / rules directories.
 
 - **What it produces:** a Simple-Icons-compatible `24×24` master SVG plus mono / color variants at `16, 24, 32, 64, 128, 256, 512` px, PNG previews, and a favicon set.
 - **What it enforces:** single `<path>`, no `fill` / `stroke` on the master, touches ≥ 2 sides of the viewBox, centered, ink coverage ~ 25–65 %, 16 px legibility.
@@ -23,7 +25,7 @@ A TRAE **Skill** authoring project that turns a natural-language product brief i
 ```
 logo-svg-generator-skill/
 ├─ skill/
-│  └─ SKILL.md                    ← the actual skill definition (deployed to .trae/skills/)
+│  └─ SKILL.md                    ← the actual skill definition (deploy to any agent's skill dir)
 ├─ assets/                        ← project brand assets (this repo's own logo)
 │  ├─ logo.svg                        24×24 Simple-Icons master (self-dogfooded)
 │  ├─ logo-mono-128.svg               128 px monochrome preview
@@ -42,7 +44,7 @@ logo-svg-generator-skill/
 │  ├─ render_previews.py          ← rasterize + build a review-sheet PNG
 │  ├─ export_variants.py          ← multi-size + color + PNG variants
 │  ├─ simplify_for_small.py       ← path simplification for 16 / 24 px
-│  └─ deploy_skill.py             ← copy this project into .trae/skills/
+│  └─ deploy_skill.py             ← copy this project into your agent's skill dir
 ├─ examples/                      ← ready-to-run example briefs + expected output
 │  ├─ 01-novasync/                    file-sync tool
 │  ├─ 02-lumendb/                     analytics database
@@ -66,15 +68,23 @@ python -m pip install cairosvg pillow
 
 Python 3.10+ is required. `cairosvg` / `pillow` are only needed if you want the scripts to rasterize PNG previews locally; the skill itself works without them.
 
-### 2. Deploy the skill into your local TRAE
+### 2. Deploy the skill into your agent
 
 ```powershell
 python scripts\deploy_skill.py
 ```
 
-This copies `skill/SKILL.md`, `references/`, `templates/` and `scripts/` into `.trae/skills/logo-svg-generator/`.
+This copies `skill/SKILL.md`, `references/`, `templates/` and `scripts/` into a target skill directory (default: `.trae/skills/logo-svg-generator/`). Pass `--target` to point at any other agent's skill folder — e.g. Opencode / Claude Code / Hermes / openclaw / Cursor — or simply symlink / copy the `skill/` directory into wherever your agent loads instruction packs from:
 
-### 3. Ask TRAE to design a logo
+```powershell
+# Examples — pick whichever matches your agent
+python scripts\deploy_skill.py --target C:\path\to\.opencode\skills
+python scripts\deploy_skill.py --target C:\path\to\.claude\skills
+python scripts\deploy_skill.py --target C:\path\to\.hermes\skills
+python scripts\deploy_skill.py --target C:\path\to\.openclaw\skills
+```
+
+### 3. Ask your agent to design a logo
 
 > "Make me a logo for **NovaSync**, a cross-device file sync tool for developers. Clean and modern, indigo color."
 
@@ -91,7 +101,7 @@ The skill will:
 
 ## Examples
 
-Ready-to-run briefs live under [`examples/`](./examples/). Each example folder contains a `brief.md` you can copy-paste into TRAE plus a `README.md` describing the expected outputs.
+Ready-to-run briefs live under [`examples/`](./examples/). Each example folder contains a `brief.md` you can copy-paste into any agent chat plus a `README.md` describing the expected outputs.
 
 | Example | Brief | Motif |
 |---|---|---|
@@ -102,7 +112,7 @@ Ready-to-run briefs live under [`examples/`](./examples/). Each example folder c
 Run any example directly:
 
 ```powershell
-# after deploying the skill, in TRAE:
+# after deploying the skill, in your agent chat:
 Please use the logo-svg-generator skill on examples/01-novasync/brief.md
 ```
 
@@ -167,7 +177,8 @@ Iteration cap and acceptance thresholds are configurable in [`scripts/config.jso
 
 - **Runtime:** Python 3.10+
 - **Optional (PNG previews):** `cairosvg` + `pillow`, or `resvg`, or `inkscape` on PATH
-- **Skill runtime:** any modern **vision-capable LLM** (provider-agnostic prompt)
+- **Host agent:** any coding agent / LLM tool that loads Markdown-based skills or instruction files — TRAE, Opencode, Claude Code, Hermes, openclaw, Cursor, Continue, or your own harness
+- **Model runtime:** any modern **vision-capable LLM** (provider-agnostic prompt)
 
 ---
 
@@ -184,7 +195,7 @@ git remote add origin https://github.com/<you>/logo-svg-generator-skill.git
 git push -u origin main
 ```
 
-For **clawhub**, the same tree can be uploaded as-is; the `skill/SKILL.md` file is the skill entry point.
+For **clawhub** — or any skill marketplace that expects a `SKILL.md` entry — the same tree can be uploaded as-is; the `skill/SKILL.md` file is the skill entry point, and the accompanying `references/`, `templates/`, `scripts/` folders travel with it unchanged.
 
 ### Cutting a release
 
