@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-07-14
+### Changed
+- **Vision-capable LLM is now the default, non-optional reviewer for the logo check loop.** Step 4 in `SKILL.md` upgraded to a hard requirement: the `_review.png` MUST be attached as a real image input so the model exercises its vision pathway; text-only critique is not an acceptable substitute.
+- When no vision-capable LLM is available, the skill MUST explicitly stop, inform the user, and only continue after the user opts in (or the caller passes `--no-review` / sets `require_vision_llm=false` in `scripts/config.json`) — silent fallback to structural-only is removed.
+- `SKILL.md` edge-case matrix updated: "Vision LLM unavailable / rate-limited" now stops for user consent before degrading to `review_mode = "structural-only"`.
+- `assets/templates/visual-review-prompt.md` gains a top-of-file "Mandatory reviewer type" banner, explicit `attach as image input` guidance for `_review.png`, and a rewritten Fallback section that spells out the opt-in preconditions.
+
+### Added
+- `scripts/config.json`: new `require_vision_llm: true` flag to enforce the vision-LLM default at the configuration layer.
+
 ## [0.3.0] - 2026-07-14
 ### Changed
 - **Repository layout now conforms to the [SkillHub publish spec](https://skillhub.cn/tutorials#publish-manage-skill).**

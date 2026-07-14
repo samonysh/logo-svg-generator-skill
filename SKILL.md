@@ -1,7 +1,7 @@
 ---
 name: "logo-svg-generator"
 description: "Generate multi-size SVG logos from natural-language product briefs, following Simple Icons design rules; runs an iterative generate → visual-check → optimize loop with a vision-capable LLM. Invoke when the user asks to design a logo, brand mark, app icon or product icon from a description."
-version: "0.3.0"
+version: "0.3.1"
 tags: ["design", "svg", "logo", "brand", "vector", "icon"]
 ---
 
