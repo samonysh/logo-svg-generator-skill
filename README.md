@@ -1,4 +1,12 @@
-# logo-svg-generator
+<p align="center">
+  <img src="./assets/logo-color-128.svg" alt="logo-svg-generator" width="128" height="128">
+</p>
+
+<h1 align="center">logo-svg-generator</h1>
+
+<p align="center">
+  <em>AI-generated, Simple-Icons-compliant SVG logos — designed by the skill itself.</em>
+</p>
 
 > 中文文档请见 **[README.zh-CN.md](./README.zh-CN.md)**
 
@@ -16,6 +24,10 @@ A TRAE **Skill** authoring project that turns a natural-language product brief i
 logo-svg-generator-skill/
 ├─ skill/
 │  └─ SKILL.md                    ← the actual skill definition (deployed to .trae/skills/)
+├─ assets/                        ← project brand assets (this repo's own logo)
+│  ├─ logo.svg                        24×24 Simple-Icons master (self-dogfooded)
+│  ├─ logo-mono-128.svg               128 px monochrome preview
+│  └─ logo-color-128.svg               128 px indigo #4F46E5 preview
 ├─ references/
 │  ├─ design-rules.md             ← condensed Simple Icons style guide
 │  ├─ motif-patterns.md           ← reusable single-path recipes
@@ -205,3 +217,13 @@ Requires `git` + `gh` (GitHub CLI, already `gh auth login`ed).
 ## License
 
 [MIT](./LICENSE)
+
+---
+
+## Project logo
+
+The mark above is the skill's own logo, **designed by the skill itself** as a dogfooding exercise — a rounded-square icon canvas holding an 8-point AI sparkle, brand hex `#4F46E5`. Source files live under [`assets/`](./assets):
+
+- [`assets/logo.svg`](./assets/logo.svg) — 24×24 Simple-Icons-compliant master (validated by [`scripts/validate_svg.py`](./scripts/validate_svg.py))
+- [`assets/logo-mono-128.svg`](./assets/logo-mono-128.svg) — 128 px monochrome
+- [`assets/logo-color-128.svg`](./assets/logo-color-128.svg) — 128 px indigo brand color

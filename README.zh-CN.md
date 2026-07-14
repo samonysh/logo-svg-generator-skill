@@ -1,4 +1,12 @@
-# logo-svg-generator
+<p align="center">
+  <img src="./assets/logo-color-128.svg" alt="logo-svg-generator" width="128" height="128">
+</p>
+
+<h1 align="center">logo-svg-generator</h1>
+
+<p align="center">
+  <em>由 Skill 自身生成、Simple-Icons 兼容的 SVG Logo。</em>
+</p>
 
 > For English documentation, see **[README.md](./README.md)**
 
@@ -16,6 +24,10 @@
 logo-svg-generator-skill/
 ├─ skill/
 │  └─ SKILL.md                    ← Skill 本体（部署到 .trae/skills/）
+├─ assets/                        ← 项目自身的品牌资源（本仓库的 Logo）
+│  ├─ logo.svg                        24×24 Simple-Icons 主图（Skill 自产）
+│  ├─ logo-mono-128.svg               128 px 黑白预览
+│  └─ logo-color-128.svg              128 px 靛蓝 #4F46E5 预览
 ├─ references/
 │  ├─ design-rules.md             ← 精简版 Simple Icons 设计规则
 │  ├─ motif-patterns.md           ← 常见单路径造型配方
@@ -205,3 +217,13 @@ python scripts\release.py all --version 0.2.0
 ## 许可证
 
 [MIT](./LICENSE)
+
+---
+
+## 项目 Logo
+
+顶部这枚标识是 **本 Skill 用自己生成的**——一个圆角方形"图标画布"包住一颗 8 顶点的 AI sparkle，品牌色 `#4F46E5`。源文件在 [`assets/`](./assets) 目录下：
+
+- [`assets/logo.svg`](./assets/logo.svg) —— 24×24 Simple-Icons 合规主图（已通过 [`scripts/validate_svg.py`](./scripts/validate_svg.py)）
+- [`assets/logo-mono-128.svg`](./assets/logo-mono-128.svg) —— 128 px 黑白
+- [`assets/logo-color-128.svg`](./assets/logo-color-128.svg) —— 128 px 靛蓝品牌色
